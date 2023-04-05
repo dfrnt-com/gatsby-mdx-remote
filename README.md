@@ -13,6 +13,8 @@ Multiple source node type are supported with individual configurations.
 
 Developed to be used for building MDX-based static websites out of TerminusDB data products hosted at [DFRNT.com](https://dfrnt.com?utm_source=gatsby), accessed via GraphQL.
 
+The frontmatter is expected to be part of the node, and not the MDX contents. PRs and issues are welcome to add additional capabilities to the plugin!
+
 ## 🚀 Quick start, step 1: prerequisites
 
 To get started with this plugin, you need to have a working MDX support. To support querying for frontmatter and body, at least one local MDX file must exist.
