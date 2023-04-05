@@ -1,7 +1,7 @@
 {
-  "name": "gatsby-starter-plugin",
+  "name": "gatsby-transform-remote-mdx",
   "version": "1.0.0",
-  "description": "A minimal boilerplate for the essential files Gatsby looks for in a plugin",
+  "description": "A plugin to transform nodes with mdx content and frontmatter into mdx File nodes for consumption by the gatsby-plugin-mdx plugin",
   "main": "index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
@@ -11,6 +11,10 @@
     "gatsby",
     "gatsby-plugin"
   ],
-  "author": "Kyle Gill <kyle.robert.gill@gmail.com>",
-  "license": "0BSD"
+  "author": "Philippe Höij <philippe.hoij@dfrnt.com>",
+  "license": "MIT",
+  "dependencies": {
+    "gatsby-source-filesystem": "^5.8.0",
+    "yaml": "^2.2.1"
+  }
 }

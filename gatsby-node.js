@@ -1,14 +1,17 @@
+const {createMdxNode} = require("./src/createMdxNode");
 /**
  * Implement Gatsby's Node APIs in this file.
  *
  * See: https://www.gatsbyjs.com/docs/node-apis/
  */
-// You can delete this file if you're not using it
 
-/**
- * You can uncomment the following line to verify that
- * your plugin is being loaded in your site.
- *
- * See: https://www.gatsbyjs.com/docs/creating-a-local-plugin/#developing-a-local-plugin-that-is-outside-your-project
- */
-exports.onPreInit = () => console.log("Loaded gatsby-starter-plugin")
+exports.onPreInit = () => console.log("Loaded gatsby-transform-remote-mdx")
+
+exports.onCreateNode = (sourceArgs, options) => {
+  const { node } = sourceArgs;
+
+  const configuredMdxNodeTypes = options.mdxNodeTypes && Object.keys(options.mdxNodeTypes);
+  if(configuredMdxNodeTypes && configuredMdxNodeTypes.indexOf(node.internal.type) !== -1) {
+    createMdxNode(node, options.mdxNodeTypes[node.internal.type], sourceArgs);
+  }
+}
