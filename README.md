@@ -79,3 +79,85 @@ module.exports = {
 ```shell
 gatsby develop
 ```
+
+## Example sourceNodes as a reference
+
+Using this example, to be used in `gatsby-node.js`, an MDX File node is created from an arbitrary string. Once created in sourceNodes, it uses the example configuration above, and becomes rendered through the created paged section next.
+
+### `gatsby-node.js` sourceNodes section
+
+```javascript
+exports.sourceNodes = ({ actions, createNodeId, createContentDigest }) => {
+  const { createNode } = actions
+
+  // Data can come from anywhere, but for now create it manually
+  const frontmatter = {
+    author: "John Doe",
+    slug: `blog/blogpost`,
+    title: `John Does first blogpost`
+  }
+
+  const mdx = `# Hello world\n\nHello world text`
+  const myData = {
+    frontmatter,
+    statement: { markdown: mdx }
+  };
+  const nodeContent = JSON.stringify(myData)
+
+  const nodeMeta = {
+    id: createNodeId(`local-data-${12345}`),
+    parent: null,
+    children: [],
+    internal: {
+      type: `MyNodeType`,
+      mediaType: `text/html`,
+      content: nodeContent,
+      contentDigest: createContentDigest(myData)
+    }
+  }
+
+  const node = Object.assign({}, myData, nodeMeta)
+  createNode(node)
+}
+
+```
+
+### `gatsby-node.js` createPages section
+
+In below createPages example we use `getNode()` to resolve the node. The reason is that there is some interoperability issue, where at least one local mdx node is required for the GraphQL types to be properly created. Using createPages like below is a workaround for that issue.
+
+Therefore the suggestion to create at least one real local MDX file, any page really, so that the GraphQL configuration is updated for Mdx nodes. If so, a regular GraphQL query can be used.
+
+```javascript
+exports.createPages = async ({ graphql, actions, reporter, getNode }) => {
+  const { createPage, createNode } = actions;
+  const result= await graphql(`
+    query {
+      allMdx {
+        nodes {
+          id
+          parent {
+            id
+          }
+        }
+      }
+    }
+  `);
+
+  result.data.allMdx.nodes.forEach((node) => {
+    // For some reason, the fields are not showing up in GraphQL...
+    const mdxNode = getNode(node.id);
+    createPage({
+      path: `/${(mdxNode?.frontmatter).slug}`,
+      // component: path.resolve(`./src/layouts/page.jsx?__contentFilePath=${mdxNode?.internal.contentFilePath}`),
+      component: mdxNode?.internal.contentFilePath,
+      ownerNodeId: `dfrnt-graphql`,
+      // The context is passed as props to the component as well
+      // as into the component's GraphQL query.
+      context: {
+        ...mdxNode,
+      },
+    });
+  });
+};
+```
