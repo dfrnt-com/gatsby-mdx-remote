@@ -1,6 +1,6 @@
 {
   "name": "gatsby-transform-remote-mdx",
-  "version": "1.0.2",
+  "version": "1.0.3",
   "description": "A plugin to transform nodes with mdx content and frontmatter into mdx File nodes for consumption by the gatsby-plugin-mdx plugin",
   "main": "index.js",
   "scripts": {
@@ -9,7 +9,11 @@
   },
   "keywords": [
     "gatsby",
-    "gatsby-plugin"
+    "gatsby-plugin",
+    "gatsby-transformer-plugin",
+    "mdx",
+    "dfrnt",
+    "remote"
   ],
   "author": "Philippe Höij <philippe.hoij@dfrnt.com>",
   "license": "MIT",
