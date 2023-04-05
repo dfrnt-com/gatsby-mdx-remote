@@ -9,7 +9,9 @@
 
 This is a minimal transformation plugin that takes sourced nodes and builds MDX File nodes out of them, with configurable node locations for the mdx field to use, and where to source the frontmatter.
 
-Multiple source nodes are supported.
+Multiple source node type are supported with individual configurations.
+
+Developed to be used for building MDX-based static websites out of TerminusDB data products hosted at [DFRNT.com](https://dfrnt.com?utm_source=gatsby), accessed via GraphQL.
 
 ## 🚀 Quick start, step 1: prerequisites
 
