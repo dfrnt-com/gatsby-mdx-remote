@@ -259,6 +259,8 @@ exports.createPages = async ({ graphql, actions, reporter, getNode }) => {
 
 ## Troubleshooting
 
+### Can't find imageList in frontmatter
+
 There seems to be a bug in remote MDX processing in that a local MDX file must exist with the target MDX frontmatter type configuration. Otherwise the schema will not be created correctly.
 
 Create an MDX file that looks like this in a location where MDX files are loaded:
@@ -275,6 +277,10 @@ No content
 ```
 
 This will ensure that MDX files have `slug`, `title` and `imageList` properties. If the `imageList` array does not exist for the frontmatter, the remote image preprocessing will not work. 
+
+### In general
+
+The MDX relies on a correct cache. Many things are helped by starting over with the cache, using `gatsby clean`. Depending on your situation, it can be helpful to try!
 
 ## How to develop locally
 

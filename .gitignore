@@ -69,5 +69,4 @@ yarn-error.log
 .yarn-integrity
 
 # When built these are generated
-/*.js
 !index.js
