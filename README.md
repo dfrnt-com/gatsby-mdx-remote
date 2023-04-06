@@ -259,6 +259,33 @@ exports.createPages = async ({ graphql, actions, reporter, getNode }) => {
 
 ## Troubleshooting
 
+### Add the relevant fields to you page query so they can be used in the MDX
+
+The fields that are referenced to render the images (if preprocessing with sharp) must be available in the `pageContext` (`props.pageContext.images.childImageSharp.gatsbyImageData`), you will likely also need the `frontmatter.imageList`.
+
+```graphql
+  query {
+    allMdx {
+      nodes {
+        id
+        images {
+          childImageSharp {
+            gatsbyImageData
+          }
+        }
+        internal {
+          contentFilePath
+        }
+        frontmatter {
+          slug
+          imageList
+          title
+        }
+      }
+    }
+  }
+```
+
 ### Can't find imageList in frontmatter
 
 There seems to be a bug in remote MDX processing in that a local MDX file must exist with the target MDX frontmatter type configuration. Otherwise the schema will not be created correctly.
@@ -270,7 +297,7 @@ Create an MDX file that looks like this in a location where MDX files are loaded
 slug: no/content
 title: Empty file
 imageList:
-- ./image
+- https://upload.wikimedia.org/wikipedia/en/a/a9/Example.jpg
 ---
 
 No content
