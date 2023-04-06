@@ -11,11 +11,11 @@
 
 This is a minimal transformation plugin that takes sourced nodes and builds MDX File nodes out of them, with configurable node locations for the mdx field to use, and where to source the frontmatter.
 
-Multiple source node type are supported with individual configurations.
+Multiple source node type are supported with individual configurations. Each source node type can be configured independently to preprocess images with sharp, which is the default behaviour.
 
-Developed to be used for building MDX-based static websites out of TerminusDB data products hosted at [DFRNT.com](https://dfrnt.com?utm_source=gatsby), accessed via GraphQL.
+Developed to be used for building MDX-based static websites out of TerminusDB data products hosted at [DFRNT.com](https://dfrnt.com?utm_source=gatsby), accessed via GraphQL. But it should be applicable for most remote MDX/Markdown with images.
 
-The frontmatter is expected to be part of the node, and not the MDX contents. PRs and issues are welcome to add additional capabilities to the plugin!
+The frontmatter is expected to be part of the sourced node, and not the MDX contents. PRs and issues are welcome to add additional capabilities to the plugin!
 
 ### Dependencies
 
@@ -24,6 +24,12 @@ For this plugin to work, the following dependencies are recommended:
 * gatsby-source-filesystem
 * gatsby-plugin-mdx
 * use at least one .mdx file from the local filesystem (to populate the GraphQL types properly)
+
+If preprocessing images (the default behaviour):
+
+* gatsby-plugin-image
+* gatsby-plugin-sharp
+* gatsby-transformer-sharp
 
 ### Learning Resources
 
@@ -79,8 +85,12 @@ module.exports = {
             mdxFrontmatterField: "frontmatter",
           }
         },
+        preprocessImages: true
       }
     },
+    `gatsby-plugin-image`,
+    `gatsby-plugin-sharp`,
+    `gatsby-transformer-sharp`,
     {
       resolve: `gatsby-plugin-mdx`,
       options: {
@@ -96,6 +106,7 @@ module.exports = {
         ],
       },
     },
+
   ],
 }
 ```
@@ -106,20 +117,18 @@ module.exports = {
 gatsby develop
 ```
 
-## Available options (if any)
+## Options
 
-The only options available in this initial version is which NodeTypes that should be picked up to create Mdx nodes from, and where to find the `mdx` string, and where to find the `frontmatter` object. For the configuration options below, this would be the data in the node:
+The plugin supports options to ignore files and to pass options to the [`slugify`](https://github.com/sindresorhus/slugify) instance that is used in the File System Route API to create slugs.
 
-```javascript
-const myData = {
-  frontmatter: {
-    author: "John Doe",
-    slug: `blog/blogpost`,
-    title: `John Does first blogpost`
-  },
-  statement: { markdown: `# Hello world\n\nHello world text` }
-};
-```
+| Option  | Type                                                 | Description                                                                                                                                                  | Required |
+| ------- | ---------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------ | -------- |
+| mdxNodeTypes    | `object`                                             | The keys of the object represent selected GraphQL node types to process as MDX source nodes. Each value is an object with `mdxField` and `mdxFrontmatterField` indicating where to find the mdx string, and the frontmatter JSON object that will be converted to a frontmatter yaml. If the mdxFrontmatterField is not defined, it is assumed frontmatter is added as part of the mdx directly.                                                  | true     |
+| preprocessImages  | `boolean` | Defaults to true, indicating that remote images will be downloaded and processed by sharp. Image tags will be replaced by GatsbyImage                                                                                               | false    |
+
+The object field separator is `.`, for traversing the object hierarchy. Normal local MDX files are not affected by the plugin, but there needs to be at least one MDX file for the frontmatter fields to be loaded correctly. 
+
+Example configuration options below:
 
 ```javascript
 module.exports = {
@@ -134,11 +143,26 @@ module.exports = {
             mdxFrontmatterField: "frontmatter",
           }
         },
+        preprocessImages: true // defaults to true, set to false for <img/> tags for images
       }
     }
   ]
 }
 ```
+
+Example source node for the above configuration.
+
+```javascript
+const myData = {
+  frontmatter: {
+    author: "John Doe",
+    slug: `blog/blogpost`,
+    title: `John Does first blogpost`
+  },
+  statement: { markdown: `# Hello world\n\nHello world text` }
+};
+```
+
 
 ## When do I use this plugin?
 
@@ -243,4 +267,4 @@ It is suggested to run `npm link` in the directory, and then run `npm link gatsb
 
 If you have unanswered questions, would like help with enhancing or debugging the plugin, add issues and pull requests to [dfrnt-com/gatsby-transform-remote-mdx](https://github.com/dfrnt-com/gatsby-transform-remote-mdx).
 
-This is a project offered as-is to the community under the MIT license. Contributions are more than welcome!
+This is a project offered as-is to the community under the MIT license. Contributions are more than welcome! Please visit the [DFRNT data product builder](https://dfrnt.com) to learn more about building websites from knowledge graphs using data products with strong data models in TerminusDB data products.

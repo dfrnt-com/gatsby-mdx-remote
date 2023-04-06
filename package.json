@@ -1,11 +1,11 @@
 {
   "name": "gatsby-transform-remote-mdx",
-  "version": "1.0.3",
+  "version": "1.0.4",
   "description": "A plugin to transform nodes with mdx content and frontmatter into mdx File nodes for consumption by the gatsby-plugin-mdx plugin",
   "main": "index.js",
-  "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1",
-    "build": "echo \"No build script setup\""
+  "homepage": "https://github.com/dfrnt-com/gatsby-transform-remote-mdx#readme",
+  "bugs": {
+    "url": "https://github.com/dfrnt-com/gatsby-transform-remote-mdx/issues"
   },
   "keywords": [
     "gatsby",
@@ -19,6 +19,14 @@
   "license": "MIT",
   "dependencies": {
     "gatsby-source-filesystem": "^5.8.0",
+    "remark": "^13.0.0",
+    "unist-util-visit": "^2.0.3",
     "yaml": "^2.2.1"
+  },
+  "peerDependencies": {
+    "gatsby": "^5.0.0-next"
+  },
+  "engines": {
+    "node": ">=18.0.0"
   }
 }

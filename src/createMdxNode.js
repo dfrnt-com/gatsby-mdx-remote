@@ -1,6 +1,8 @@
 
-const { createFileNodeFromBuffer } = require("gatsby-source-filesystem");
+const { createFileNodeFromBuffer, createRemoteFileNode, createFilePath } = require("gatsby-source-filesystem");
 const YAML = require("YAML");
+const remark = require("remark")
+const visit = require("unist-util-visit")
 
 const recurseFieldContent = (nodeData, objectFieldSequence) => {
   if (objectFieldSequence.length === 0 || !nodeData) {
@@ -19,6 +21,29 @@ const recurseFieldContent = (nodeData, objectFieldSequence) => {
   }
 };
 
+const cacheMdxImages = async ({ pushImageUrlList }, content) => {
+  var tree = remark().parse(content)
+  const urlList = []
+
+  function visitor(node) {
+    if (node.url) {
+      const index = urlList.length;
+      urlList.push(node.url)
+
+      const html = `<GatsbyImage alt="${node.alt}" title="${node.title}" image={getImage(props.pageContext.images[${index}]?.childImageSharp?.gatsbyImageData)} />\n`;
+      node.type = "html";
+      node.children = undefined;
+      node.value = html;
+    }
+  }
+
+  visit(tree, "image", visitor)
+
+  const mdx = remark.stringify(tree);
+  urlList.forEach(url => pushImageUrlList(url))
+  return mdx
+}
+
 const createMdxNode = async (
   nodeData,
   typeConfig,
@@ -26,18 +51,30 @@ const createMdxNode = async (
 ) => {
   const { actions, createNodeId, getCache } = args;
   const { createNode } = actions;
-
-  const frontmatterField = typeConfig.mdxFrontmatterField;
-  const frontmatterFields =
-    (frontmatterField && (frontmatterField.indexOf(".") !== -1 ? frontmatterField.split(".") : [frontmatterField])) || undefined;
-  const frontmatterFieldData = frontmatterFields && recurseFieldContent(nodeData, frontmatterFields);
-  const frontmatter = frontmatterFieldData && `---\n${YAML.stringify(frontmatterFieldData)}---\n`;
+  const preprocessImages = typeConfig.preprocessImages === undefined || typeConfig.preprocessImages;
 
   const mdxField = typeConfig.mdxField;
   const mdxFields = mdxField ? mdxField.split(".") : undefined;
   const mdxFieldData = mdxFields && `\n${recurseFieldContent(nodeData, mdxFields) ?? ""}`;
 
-  const mdxContentWithFrontmatter = `${frontmatter}${mdxFieldData}`;
+  const urlList = []
+
+  const mdxProcessedFieldData = preprocessImages ? await cacheMdxImages({
+    createNode,
+    createNodeId,
+    parentNodeId: nodeData.id,
+    getCache,
+    pushImageUrlList: (value) => urlList.push(value)
+  }, mdxFieldData) : mdxFieldData;
+
+  const frontmatterField = typeConfig.mdxFrontmatterField;
+  const frontmatterFields =
+    (frontmatterField && (frontmatterField.indexOf(".") !== -1 ? frontmatterField.split(".") : [frontmatterField])) || undefined;
+  const frontmatterFieldData = frontmatterFields && recurseFieldContent(nodeData, frontmatterFields);
+  const frontmatter = frontmatterFieldData && `---\n${YAML.stringify({...frontmatterFieldData, imageList: urlList})}---\n`;
+
+  const gatsbyImageImport = preprocessImages && (mdxProcessedFieldData.indexOf("import { GatsbyImage, getImage") === -1 && mdxProcessedFieldData.indexOf("import { getImage, GatsbyImage") === -1) ? "import { GatsbyImage, getImage } from \"gatsby-plugin-image\"" : "";
+  const mdxContentWithFrontmatter = `${typeConfig.mdxFrontmatterField && frontmatter}\n\n${gatsbyImageImport}\n\n${mdxProcessedFieldData}`;
 
   if (mdxContentWithFrontmatter) {
     return createFileNodeFromBuffer({
