@@ -128,6 +128,8 @@ The plugin supports options to ignore files and to pass options to the [`slugify
 
 The object field separator is `.`, for traversing the object hierarchy. Normal local MDX files are not affected by the plugin, but there needs to be at least one MDX file for the frontmatter fields to be loaded correctly. 
 
+Check the troubleshooting section for more information about the required local MDX files for proper MDX typings.
+
 Example configuration options below:
 
 ```javascript
@@ -163,6 +165,7 @@ const myData = {
 };
 ```
 
+Do note that all markdown image nodes `![]()` will be represented as an array in the frontmatter as `imageList`. The produced `Mdx` nodes have a resolver attached as `images` that resolve each downloaded file that get used with the <GatsbyImage/> image replacement.
 
 ## When do I use this plugin?
 
@@ -253,6 +256,25 @@ exports.createPages = async ({ graphql, actions, reporter, getNode }) => {
   });
 };
 ```
+
+## Troubleshooting
+
+There seems to be a bug in remote MDX processing in that a local MDX file must exist with the target MDX frontmatter type configuration. Otherwise the schema will not be created correctly.
+
+Create an MDX file that looks like this in a location where MDX files are loaded:
+
+```markdown
+---
+slug: no/content
+title: Empty file
+imageList:
+- ./image
+---
+
+No content
+```
+
+This will ensure that MDX files have `slug`, `title` and `imageList` properties. If the `imageList` array does not exist for the frontmatter, the remote image preprocessing will not work. 
 
 ## How to develop locally
 

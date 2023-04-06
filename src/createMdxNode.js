@@ -74,7 +74,7 @@ const createMdxNode = async (
   const frontmatter = frontmatterFieldData && `---\n${YAML.stringify({...frontmatterFieldData, imageList: urlList})}---\n`;
 
   const gatsbyImageImport = preprocessImages && (mdxProcessedFieldData.indexOf("import { GatsbyImage, getImage") === -1 && mdxProcessedFieldData.indexOf("import { getImage, GatsbyImage") === -1) ? "import { GatsbyImage, getImage } from \"gatsby-plugin-image\"" : "";
-  const mdxContentWithFrontmatter = `${typeConfig.mdxFrontmatterField && frontmatter}\n\n${gatsbyImageImport}\n\n${mdxProcessedFieldData}`;
+  const mdxContentWithFrontmatter = `${typeConfig.mdxFrontmatterField && frontmatter || undefined}\n\n${gatsbyImageImport}\n\n${mdxProcessedFieldData}`;
 
   if (mdxContentWithFrontmatter) {
     return createFileNodeFromBuffer({

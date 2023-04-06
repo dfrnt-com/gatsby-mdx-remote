@@ -7,6 +7,40 @@ const {createMdxNode} = require("./src/createMdxNode");
 
 exports.onPreInit = () => console.log("Loaded gatsby-transform-remote-mdx")
 
+exports.createResolvers = ({
+  actions,
+  cache,
+  createNodeId,
+  createResolvers,
+  store,
+  reporter,
+}) => {
+  const { createNode } = actions;
+  const resolvers = {
+    Mdx: {
+      images: {
+        type: `[File]`,
+        resolve: async (source, args, context, info) => {
+          reporter.info(
+            `Adding resolver for image: ${source.frontmatter.imageList}`
+          )
+          return source.frontmatter.imageList ? source.frontmatter.imageList.map(url => createRemoteFileNode({
+            url: url,
+            createNode,
+            createNodeId,
+            reporter,
+            cache,
+            store,
+          })) : [];
+        },
+
+      }
+    },
+  };
+  createResolvers(resolvers);
+};
+
+
 exports.onCreateNode = (sourceArgs, options) => {
   const { node } = sourceArgs;
 
