@@ -1,15 +1,8 @@
 import { createFileNodeFromBuffer } from "gatsby-source-filesystem";
 import YAML from "YAML";
-import { remark } from "remark";
-import visit from "unist-util-visit";
-import { Node as UnistNode } from "unist";
 import type { Node, CreateNodeArgs } from "gatsby";
-import { PluginTypeOptions } from "./gatsby-node";
-
-type IntermediateNodeData = NodeDataObject | string;
-interface NodeDataObject {
-  [key: string]: string | NodeDataObject;
-}
+import { PluginTypeOptions } from "./gatsby-node.js";
+import { extractUrlAndReplaceWithGatsbyImage } from "./extractUrlAndReplaceWithGatsbyImage.js";
 
 const recurseFieldContent = (
   nodeData: IntermediateNodeData,
@@ -31,37 +24,26 @@ const recurseFieldContent = (
   }
 };
 
-interface CachedMdxImagesFunctions {
+interface CachedMdxImagesProps {
   pushImageUrlList: (value: string) => void;
+  className?: string;
+}
+interface NodeDataObject {
+  [key: string]: string | NodeDataObject;
 }
 
-interface ImageNodeData extends UnistNode {
-  url?: string;
-  alt?: string;
-  title?: string;
-  children?: UnistNode;
-  value?: string;
-}
-const cacheMdxImages = async ({ pushImageUrlList }: CachedMdxImagesFunctions, content: string): Promise<string> => {
-  var tree = remark().parse(content);
+type IntermediateNodeData = NodeDataObject | string;
+
+const cacheMdxImages = async ({ pushImageUrlList, className }: CachedMdxImagesProps, content: string): Promise<string> => {
+  const remark = (await import("remark")).remark;
 
   const urlList: Array<string> = [];
+  const pushImageUrlToList = (value: string) => urlList.push(value);
+  const getUrlListLength = () => urlList.length;
 
-  function visitor(node: ImageNodeData): void {
-    if (node.url) {
-      const index = urlList.length;
-      urlList.push(node.url);
+  const file = await remark().use(extractUrlAndReplaceWithGatsbyImage, { pushImageUrlToList, getUrlListLength, className }).process(content);
 
-      const html = `<GatsbyImage alt="${node.alt}" title="${node.title}" image={getImage(props.pageContext.images[${index}]?.childImageSharp?.gatsbyImageData)} />\n`;
-      node.type = "html";
-      node.children = undefined;
-      node.value = html;
-    }
-  }
-
-  visit(tree, "image", visitor);
-
-  const mdx = remark.stringify(tree);
+  const mdx = "\n\n\n" + String(file);
   urlList.forEach((url) => pushImageUrlList(url));
   return mdx;
 };
@@ -73,34 +55,15 @@ export const createMdxNode = async (
 ) => {
   const { actions, createNodeId, getCache } = args;
   const { createNode } = actions;
-  const preprocessImages = typeConfig.preprocessImages === undefined || typeConfig.preprocessImages;
-
-  const mdxField = typeConfig.mdxField;
-  const mdxFields = mdxField ? mdxField.split(".") : undefined;
-  const mdxFieldData = mdxFields && `\n${recurseFieldContent(nodeData, mdxFields) ?? ""}`;
-
+  
   const urlList: Array<string> = [];
-
-  const mdxProcessedFieldData =
-    preprocessImages && mdxFieldData
-      ? await cacheMdxImages(
-          {
-            pushImageUrlList: (value) => urlList.push(value),
-          },
-          mdxFieldData
-        )
-      : mdxFieldData;
-
-  const frontmatterField = typeConfig.mdxFrontmatterField;
-  const frontmatterFields =
-    (frontmatterField && (frontmatterField.indexOf(".") !== -1 ? frontmatterField.split(".") : [frontmatterField])) || undefined;
-  const recursedFrontmatterFieldData = frontmatterFields && recurseFieldContent(nodeData, frontmatterFields);
-  const frontmatterFieldData =
-    (recursedFrontmatterFieldData && typeof recursedFrontmatterFieldData !== "string" && recursedFrontmatterFieldData) || undefined;
-  const frontmatter = frontmatterFieldData && `---\n${YAML.stringify({ ...frontmatterFieldData, imageList: urlList })}---\n`;
+  
+  const isPreprocessImagesEnabled = typeConfig.preprocessImages === undefined || typeConfig.preprocessImages;
+  const mdxProcessedFieldData = await getMdx(typeConfig, nodeData, isPreprocessImagesEnabled, (value) => urlList.push(value));
+  const frontmatter = getMdxFrontmatter(typeConfig, nodeData, urlList);
 
   const gatsbyImageImport =
-    preprocessImages &&
+    isPreprocessImagesEnabled &&
     mdxProcessedFieldData &&
     mdxProcessedFieldData.indexOf("import { GatsbyImage, getImage") === -1 &&
     mdxProcessedFieldData.indexOf("import { getImage, GatsbyImage") === -1
@@ -122,3 +85,28 @@ export const createMdxNode = async (
     });
   }
 };
+
+async function getMdx(
+  typeConfig: PluginTypeOptions,
+  nodeData: Node & Record<string, any>,
+  isPreprocessImagesEnabled: boolean,
+  pushImageUrlList: (value: string) => void
+) {
+  const mdxField = typeConfig.mdxField;
+  const className = typeConfig.className;
+  const mdxFields = mdxField ? mdxField.split(".") : undefined;
+  const mdxFieldData = mdxFields && `\n${recurseFieldContent(nodeData, mdxFields) ?? ""}`;
+
+  const mdxProcessedFieldData =
+    isPreprocessImagesEnabled && mdxFieldData ? await cacheMdxImages({ pushImageUrlList, className }, mdxFieldData) : mdxFieldData;
+  return mdxProcessedFieldData;
+}
+
+function getMdxFrontmatter(typeConfig: PluginTypeOptions, nodeData: Node & Record<string, any>, urlList: string[]) {
+  const frontmatterField = typeConfig.mdxFrontmatterField;
+  const frontmatterFields = (frontmatterField && (frontmatterField.indexOf(".") !== -1 ? frontmatterField.split(".") : [frontmatterField])) || undefined;
+  const recursedFrontmatterFieldData = frontmatterFields && recurseFieldContent(nodeData, frontmatterFields);
+  const frontmatterFieldData = (recursedFrontmatterFieldData && typeof recursedFrontmatterFieldData !== "string" && recursedFrontmatterFieldData) || undefined;
+  const frontmatter = frontmatterFieldData && `---\n${YAML.stringify({ ...frontmatterFieldData, imageList: urlList })}---\n`;
+  return frontmatter;
+}

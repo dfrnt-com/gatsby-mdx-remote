@@ -5,12 +5,12 @@ import type { GatsbyNode } from "gatsby";
 // Node API reference: https://www.gatsbyjs.com/docs/node-apis/
 
 const pluginName = "gatsby-transform-remote-mdx";
-const debugOutput = " + edited Fri 15.32";
 
 export interface PluginTypeOptions {
   mdxField: string;
   mdxFrontmatterField: string;
   preprocessImages?: boolean;
+  className?: string;
 }
 
 export interface PluginOptions {
@@ -26,7 +26,7 @@ interface MdxNodeShape {
   };
 }
 
-export const onPreInit: GatsbyNode["onPreInit"] = () => console.log(`Loaded ${pluginName}${debugOutput}`);
+export const onPreInit: GatsbyNode["onPreInit"] = () => console.log(`Loaded ${pluginName}`);
 
 export const createResolvers: GatsbyNode["createResolvers"] = async (
   { actions, cache, createNodeId, createResolvers, store, reporter },
@@ -38,7 +38,6 @@ export const createResolvers: GatsbyNode["createResolvers"] = async (
       images: {
         type: `[File]`,
         resolve: async (source: MdxNodeShape, _args: unknown, _context: unknown, _info: unknown) => {
-          reporter.info(`Adding resolver for image: ${source.frontmatter.imageList}`);
           return source.frontmatter.imageList
             ? source.frontmatter.imageList.map((url) =>
                 createRemoteFileNode({
@@ -61,7 +60,7 @@ export const onCreateNode: GatsbyNode["onCreateNode"] = async (sourceArgs, optio
     throw new Error("This plugin requires mdxNodeTypes to be defined");
   }
 
-  // FIXME: Guard this properly in the future!
+  // FIXME: Inprovement opportunity: Guard the imput
   const pluginOptions: PluginOptions = options as any;
 
   const { node } = sourceArgs;

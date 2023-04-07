@@ -1,7 +1,8 @@
 {
   "compilerOptions": {
-    "target": "es5",
-    "lib": ["dom", "es6"],
+    "target": "ES2021",
+    "lib": ["dom", "ESNext"],
+    "module": "Node16",
     "sourceMap": true,
     "jsx": "react",
     "noUnusedLocals": true,
@@ -21,7 +22,8 @@
     // outDir will put the compiled javascript files in our root directory
     // just as we were doing before with our babel compilation
     "outDir": ".",
-    "skipLibCheck": true
+    "skipLibCheck": true,
+    "moduleResolution": "Node16"
   },
   "include": ["./src/**/*", "./src/*"],
   "exclude": ["./node_modules/*"]

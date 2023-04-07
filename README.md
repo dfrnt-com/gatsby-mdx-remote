@@ -125,6 +125,7 @@ The plugin supports options to ignore files and to pass options to the [`slugify
 | ------- | ---------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------ | -------- |
 | mdxNodeTypes    | `object`                                             | The keys of the object represent selected GraphQL node types to process as MDX source nodes. Each value is an object with `mdxField` and `mdxFrontmatterField` indicating where to find the mdx string, and the frontmatter JSON object that will be converted to a frontmatter yaml. If the mdxFrontmatterField is not defined, it is assumed frontmatter is added as part of the mdx directly.                                                  | true     |
 | preprocessImages  | `boolean` | Defaults to true, indicating that remote images will be downloaded and processed by sharp. Image tags will be replaced by GatsbyImage                                                                                               | false    |
+| className  | `string` | Class names to apply to the outer GatsbyImage component                                                                                               | false    |
 
 The object field separator is `.`, for traversing the object hierarchy. Normal local MDX files are not affected by the plugin, but there needs to be at least one MDX file for the frontmatter fields to be loaded correctly. 
 
