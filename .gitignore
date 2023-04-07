@@ -70,3 +70,7 @@ yarn-error.log
 
 # When built these are generated
 !index.js
+/*.ts
+/*.js
+/*.ts.map
+/*.js.map
