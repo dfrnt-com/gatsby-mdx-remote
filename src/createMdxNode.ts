@@ -93,7 +93,7 @@ async function getMdx(
   pushImageUrlList: (value: string) => void
 ) {
   const mdxField = typeConfig.mdxField;
-  const className = typeConfig.className;
+  const className = typeConfig.gatsbyImageClassName ?? "";
   const mdxFields = mdxField ? mdxField.split(".") : undefined;
   const mdxFieldData = mdxFields && `\n${recurseFieldContent(nodeData, mdxFields) ?? ""}`;
 

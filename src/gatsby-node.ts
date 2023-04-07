@@ -10,7 +10,7 @@ export interface PluginTypeOptions {
   mdxField: string;
   mdxFrontmatterField: string;
   preprocessImages?: boolean;
-  className?: string;
+  gatsbyImageClassName?: string;
 }
 
 export interface PluginOptions {
