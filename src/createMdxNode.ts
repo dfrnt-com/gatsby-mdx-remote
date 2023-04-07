@@ -1,6 +1,6 @@
 import { createFileNodeFromBuffer } from "gatsby-source-filesystem";
 import YAML from "YAML";
-import remark from "remark";
+import { remark } from "remark";
 import visit from "unist-util-visit";
 import { Node as UnistNode } from "unist";
 import type { Node, CreateNodeArgs } from "gatsby";
