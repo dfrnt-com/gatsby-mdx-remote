@@ -13,9 +13,7 @@ This is a minimal transformation plugin that takes sourced nodes and builds MDX 
 
 Multiple source node type are supported with individual configurations. Each source node type can be configured independently to preprocess images with sharp, which is the default behaviour.
 
-This plugin extends the functionality of `gatsby-plugin-mdx` by creating mdx nodes from other nodes programatically.
-
-Developed to be used for building MDX-based static websites out of TerminusDB data products hosted at [DFRNT.com](https://dfrnt.com?utm_source=gatsby), accessed via GraphQL. But it should be applicable for most remote MDX/Markdown with images and any GraphQL capable [TerminusDB](https://terminusdb.com) open source or hosted instance.
+Developed to be used for building MDX-based static websites out of TerminusDB data products hosted at [DFRNT.com](https://dfrnt.com?utm_source=gatsby), accessed via GraphQL. But it should be applicable for most remote MDX/Markdown with images.
 
 The frontmatter is expected to be part of the sourced node, and not the MDX contents. PRs and issues are welcome to add additional capabilities to the plugin!
 
@@ -61,7 +59,7 @@ To get started with this plugin, you need to have a working MDX support. To supp
 ### 2. Install plugin and prerequisites
 
 ```shell
-npm install @dfrnt/gatsby-mdx-remote @mdx-js/react
+npm install gatsby-transform-remote-mdx @mdx-js/react
 ```
 
 ### 3. Configure the plugins in gatsby-config.js
@@ -78,7 +76,7 @@ module.exports = {
       __key: "pages",
     },
     {
-      resolve: `@dfrnt/gatsby-mdx-remote`,
+      resolve: `gatsby-transform-remote-mdx`,
       options: {
         mdxNodeTypes: {
           "MyNodeType": {
@@ -139,7 +137,7 @@ Example configuration options below:
 module.exports = {
   plugins: [
     {
-      resolve: `@dfrnt/gatsby-mdx-remote`,
+      resolve: `gatsby-transform-remote-mdx`,
       options: {
         mdxNodeTypes: {
           "MyNodeType": {
@@ -315,14 +313,14 @@ The MDX relies on a correct cache. Many things are helped by starting over with 
 ## How to develop locally
 
 ```shell
-git clone https://github.com/dfrnt-com/gatsby-mdx-remote
+git clone https://github.com/dfrnt-com/gatsby-transform-remote-mdx
 npm install
 ```
 
-It is suggested to run `npm link` in the directory, and then run `npm link @dfrnt/gatsby-mdx-remote` in the `example-site` used for development.
+It is suggested to run `npm link` in the directory, and then run `npm link gatsby-transform-remote-mdx` in the `example-site` used for development.
 
 ## How to contribute
 
-If you have unanswered questions, would like help with enhancing or debugging the plugin, add issues and pull requests to [dfrnt-com/gatsby-mdx-remote](https://github.com/dfrnt-com/gatsby-mdx-remote).
+If you have unanswered questions, would like help with enhancing or debugging the plugin, add issues and pull requests to [dfrnt-com/gatsby-transform-remote-mdx](https://github.com/dfrnt-com/gatsby-transform-remote-mdx).
 
 This is a project offered as-is to the community under the MIT license. Contributions are more than welcome! Please visit the [DFRNT data product builder](https://dfrnt.com) to learn more about building websites from knowledge graphs using data products with strong data models in TerminusDB data products.
