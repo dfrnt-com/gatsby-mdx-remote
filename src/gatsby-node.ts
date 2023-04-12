@@ -4,7 +4,7 @@ import type { GatsbyNode } from "gatsby";
 
 // Node API reference: https://www.gatsbyjs.com/docs/node-apis/
 
-const pluginName = "gatsby-transform-remote-mdx";
+const pluginName = "gatsby-mdx-remote";
 
 export interface PluginTypeOptions {
   mdxField: string;
@@ -21,9 +21,7 @@ export interface PluginOptions {
 
 interface MdxNodeShape {
   image: Array<string>;
-  frontmatter: {
-    imageList: Array<string>;
-  };
+  frontmatter: Record<string, any>;
 }
 
 export const onPreInit: GatsbyNode["onPreInit"] = () => console.log(`Loaded ${pluginName}`);
@@ -33,15 +31,39 @@ export const createResolvers: GatsbyNode["createResolvers"] = async (
   options
 ) => {
   const { createNode } = actions;
-  const resolvers = {
+
+  const frontmatterSharpRemoteImageUrlArrayField =
+    typeof options.frontmatterSharpRemoteImageUrlArrayField === "string"
+      ? options.frontmatterSharpRemoteImageUrlArrayField
+      : undefined;
+  const imageListResolver = {
     Mdx: {
-      images: {
+      ...((frontmatterSharpRemoteImageUrlArrayField && {
+        [frontmatterSharpRemoteImageUrlArrayField]: {
+          type: `[File]`,
+          resolve: async (source: MdxNodeShape, _args: unknown, _context: unknown, _info: unknown) => {
+            return Array.isArray(source.frontmatter[frontmatterSharpRemoteImageUrlArrayField])
+              ? source.frontmatter[frontmatterSharpRemoteImageUrlArrayField].map((url: any) =>
+                  createRemoteFileNode({
+                    url,
+                    createNode,
+                    createNodeId,
+                    cache,
+                  })
+                )
+              : [];
+          },
+        },
+      }) ||
+        {}),
+
+      "markdownImageList": {
         type: `[File]`,
         resolve: async (source: MdxNodeShape, _args: unknown, _context: unknown, _info: unknown) => {
-          return source.frontmatter.imageList
-            ? source.frontmatter.imageList.map((url) =>
+          return Array.isArray(source.frontmatter["markdownImageList"])
+            ? source.frontmatter["markdownImageList"].map((url: any) =>
                 createRemoteFileNode({
-                  url: url,
+                  url,
                   createNode,
                   createNodeId,
                   cache,
@@ -52,7 +74,33 @@ export const createResolvers: GatsbyNode["createResolvers"] = async (
       },
     },
   };
-  createResolvers(resolvers);
+
+  const mdxTypeResolvers = {
+    Query: {
+      ...((options.mdxNodeTypes &&
+        typeof options.mdxNodeTypes === "object" &&
+        !Array.isArray(options.mdxNodeTypes) &&
+        Object.keys(options.mdxNodeTypes).reduce(
+          (typeNames, typeName) => ({
+            ...typeNames,
+            [`mdx${typeName}`]: {
+              type: [typeName],
+              resolve: async (source: any, args: any, context: any, info: any) => {
+                const { entries } = await context.nodeModel.findAll({ type: typeName });
+                return entries;
+              },
+            },
+          }),
+          {}
+        )) ||
+        {}),
+    },
+  };
+
+  createResolvers({
+    ...imageListResolver,
+    ...mdxTypeResolvers,
+  });
 };
 
 export const onCreateNode: GatsbyNode["onCreateNode"] = async (sourceArgs, options) => {

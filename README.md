@@ -85,9 +85,11 @@ module.exports = {
             // If a hierarchy of objects is to be traversed, use a dot (.) for each level
             mdxField: "statement.markdown",
             mdxFrontmatterField: "frontmatter",
+            preprocessImages: true,
+            gatsbyImageClassName: "rounded-md",
           }
         },
-        preprocessImages: true
+        frontmatterSharpRemoteImageUrlArrayField: "imageList",
       }
     },
     `gatsby-plugin-image`,
@@ -123,13 +125,24 @@ gatsby develop
 
 The plugin supports options to ignore files and to pass options to the [`slugify`](https://github.com/sindresorhus/slugify) instance that is used in the File System Route API to create slugs.
 
+### Top level options object
+
 | Option  | Type                                                 | Description                                                                                                                                                  | Required |
 | ------- | ---------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------ | -------- |
-| mdxNodeTypes    | `object`                                             | The keys of the object represent selected GraphQL node types to process as MDX source nodes. Each value is an object with `mdxField` and `mdxFrontmatterField` indicating where to find the mdx string, and the frontmatter JSON object that will be converted to a frontmatter yaml. If the mdxFrontmatterField is not defined, it is assumed frontmatter is added as part of the mdx directly.                                                  | true     |
-| preprocessImages  | `boolean` | Defaults to true, indicating that remote images will be downloaded and processed by sharp. Image tags will be replaced by GatsbyImage                                                                                               | false    |
-| gatsbyImageClassName  | `string` | Class names to apply to the outer GatsbyImage component                                                                                               | false    |
+| mdxNodeTypes    | `object`                                             | The keys of this object represent selected GraphQL node types to process as MDX source nodes. Each value is an object with `mdxField`, `mdxFrontmatterField`, `preprocessImages` and `gatsbyImageClassName`. See below for details.          | true    |
+| frontmatterSharpRemoteImageUrlArrayField  | `string` | Array of URLs in the frontmatter (same for all MDX types due to technical reasons, creativity and PRs are welcome!) from which to download and process sharp images referencable from MDX, for example to build GatsbyImage nodes from a type, the string will only indicate a top level frontmatter field.                                                                                                | false    |
 
-The object field separator is `.`, for traversing the object hierarchy. Normal local MDX files are not affected by the plugin, but there needs to be at least one MDX file for the frontmatter fields to be loaded correctly. 
+
+### mdxNodeTypes object
+
+| Option  | Type                                                 | Description                                                                                                                                                  | Required |
+| ------- | ---------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------ | -------- |
+| mdxField    | `object`                                             | `mdxField` indicates where to find the mdx content string, the results are undefined if also having frontmatter as part of the MDX string.                                                  | true     |
+| mdxFrontmatterField    | `object`                                             | The `mdxFrontmatterField` provides the frontmatter JSON object which will be converted to a frontmatter yaml section.                                                  | true     |
+| preprocessImages  | `boolean` | Defaults to true, indicating that remote images will be downloaded and processed by sharp. Image tags will be replaced by GatsbyImage                                                                                               | false    |
+| gatsbyImageClassName  | `string` | Arbitraty class names to inject into converted Markdown GatsbyImage objects that get created with the preprocessImages directive. Class names will be applied to the outer GatsbyImage component                                                                                               | false    |
+
+The object field separator is `.`, for traversing the object hierarchy applies for `mdxField` and `mdxFrontmatterField` fields. Normal local MDX files are not affected by the plugin, but there needs to be at least one MDX file for the frontmatter fields to be loaded correctly. `frontmatterSharpRemoteImageUrlArrayField` is not traversed with `.` dot notation.
 
 Check the troubleshooting section for more information about the required local MDX files for proper MDX typings.
 
@@ -146,9 +159,10 @@ module.exports = {
             // If a hierarchy of objects is to be traversed, use a dot (.) for each level
             mdxField: "statement.markdown",
             mdxFrontmatterField: "frontmatter",
+            preprocessImages: true // defaults to true, set to false for <img/> tags for images
           }
         },
-        preprocessImages: true // defaults to true, set to false for <img/> tags for images
+        frontmatterSharpRemoteImageUrlArrayField: "imageList",
       }
     }
   ]
@@ -239,15 +253,42 @@ exports.createPages = async ({ graphql, actions, reporter, getNode }) => {
           }
         }
       }
+      mdxMyNodeType {
+        childMdx {
+          id
+          markdownImageList {
+            childImageSharp {
+              gatsbyImageData
+            }
+          }
+          imageList {
+            childImageSharp {
+              gatsbyImageData
+            }
+          }
+          internal {
+            contentFilePath
+          }
+        nodes {
+          id
+          parent {
+            id
+          }
+        }
+      }
     }
   `);
 
   result.data.allMdx.nodes.forEach((node) => {
-    // For some reason, the fields are not showing up in GraphQL...
+    // If for some reason, the fields are not showing up in GraphQL, this is a workaround...
+    // happened initially, seems to work normally now though, but could help someone maybe.
     const mdxNode = getNode(node.id);
     createPage({
       path: `/${(mdxNode?.frontmatter).slug}`,
-      // component: path.resolve(`./src/layouts/page.jsx?__contentFilePath=${mdxNode?.internal.contentFilePath}`),
+      // When querying for MDX nodes directly and using a template
+      //   component: path.resolve(`./src/layouts/page.jsx?__contentFilePath=${mdxNode?.internal.contentFilePath}`),
+      // If using the original rich content node, iterate the childMdx instead in the forEach above
+      // Using the MDX node directly
       component: mdxNode?.internal.contentFilePath,
       ownerNodeId: `dfrnt-graphql`,
       // The context is passed as props to the component as well
@@ -262,6 +303,22 @@ exports.createPages = async ({ graphql, actions, reporter, getNode }) => {
 
 ## Troubleshooting
 
+### Must have at least one local MDX file for the plugin to work
+
+There is likely some kind of bug if there are no .MDX files in the local filesystem. What happens is that MDX definitions will not be created if a local `.mdx` file is not present.
+
+### How to reference remote frontmatter imageList images
+
+Example GatsbyImage MDX component for referencing an imageList image when        `frontmatterSharpRemoteImageUrlArrayField` has been set to `imageList`:
+
+```markdown
+<GatsbyImage alt="test 0" image={getImage(props.pageContext.imageList[0]?.childImageSharp?.gatsbyImageData)}/>
+```
+
+Note that the original URL stays in the frontmatter verbatim, and a section is added onto the MDX node with the transformed field name (under the same name as in the frontmatter field).
+
+The transformed markdown images will instead be available in the markdownImageList frontmatter and node fields respectively.
+
 ### Add the relevant fields to you page query so they can be used in the MDX
 
 The fields that are referenced to render the images (if preprocessing with sharp) must be available in the `pageContext` (`props.pageContext.images.childImageSharp.gatsbyImageData`), you will likely also need the `frontmatter.imageList`.
@@ -271,7 +328,7 @@ The fields that are referenced to render the images (if preprocessing with sharp
     allMdx {
       nodes {
         id
-        images {
+        imageList {
           childImageSharp {
             gatsbyImageData
           }
@@ -289,7 +346,7 @@ The fields that are referenced to render the images (if preprocessing with sharp
   }
 ```
 
-### Can't find imageList in frontmatter
+### Can't find imageList (and markdownImageList) in frontmatter
 
 There seems to be a bug in remote MDX processing in that a local MDX file must exist with the target MDX frontmatter type configuration. Otherwise the schema will not be created correctly.
 
@@ -308,6 +365,8 @@ No content
 
 This will ensure that MDX files have `slug`, `title` and `imageList` properties. If the `imageList` array does not exist for the frontmatter, the remote image preprocessing will not work. 
 
+Make sure to always query for markdownImageList if you have images in your MDX file and preprocess images!
+
 ### In general
 
 The MDX relies on a correct cache. Many things are helped by starting over with the cache, using `gatsby clean`. Depending on your situation, it can be helpful to try!
@@ -321,8 +380,14 @@ npm install
 
 It is suggested to run `npm link` in the directory, and then run `npm link @dfrnt/gatsby-mdx-remote` in the `example-site` used for development.
 
+## Opportunities to contribute (suggestions for PRs)
+
+* Make `frontmatterSharpRemoteImageUrlArrayField` applicable per type
+* Make `frontmatterSharpRemoteImageUrlArrayField` traversable maybe?
+
 ## How to contribute
 
 If you have unanswered questions, would like help with enhancing or debugging the plugin, add issues and pull requests to [dfrnt-com/gatsby-mdx-remote](https://github.com/dfrnt-com/gatsby-mdx-remote).
 
 This is a project offered as-is to the community under the MIT license. Contributions are more than welcome! Please visit the [DFRNT data product builder](https://dfrnt.com) to learn more about building websites from knowledge graphs using data products with strong data models in TerminusDB data products.
+
