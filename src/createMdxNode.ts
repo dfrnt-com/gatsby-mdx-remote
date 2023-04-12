@@ -107,6 +107,6 @@ function getMdxFrontmatter(typeConfig: PluginTypeOptions, nodeData: Node & Recor
   const frontmatterFields = (frontmatterField && (frontmatterField.indexOf(".") !== -1 ? frontmatterField.split(".") : [frontmatterField])) || undefined;
   const recursedFrontmatterFieldData = frontmatterFields && recurseFieldContent(nodeData, frontmatterFields);
   const frontmatterFieldData = (recursedFrontmatterFieldData && typeof recursedFrontmatterFieldData !== "string" && recursedFrontmatterFieldData) || undefined;
-  const frontmatter = frontmatterFieldData && `---\n${YAML.stringify({ ...frontmatterFieldData, imageList: urlList })}---\n`;
+  const frontmatter = frontmatterFieldData && `---\n${YAML.stringify({ ...frontmatterFieldData, markdownImageList: urlList })}---\n`;
   return frontmatter;
 }

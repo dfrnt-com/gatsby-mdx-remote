@@ -31,7 +31,7 @@ export const extractUrlAndReplaceWithGatsbyImage =
         const index = options.getUrlListLength();
         options.pushImageUrlToList(node.url);
         const providedClassName = options.className ? `className="${options.className}"` : "";
-        const html = `<GatsbyImage alt="${node.alt}" title="${node.title}" image={getImage(props.pageContext.images[${index}]?.childImageSharp?.gatsbyImageData)} ${providedClassName} />\n`;
+        const html = `<GatsbyImage alt="${node.alt}" title="${node.title}" image={getImage(props.pageContext.markdownImageList[${index}]?.childImageSharp?.gatsbyImageData)} ${providedClassName} />\n`;
         node.type = "html";
         node.name = "GatsbyImage";
         node.children = undefined;
