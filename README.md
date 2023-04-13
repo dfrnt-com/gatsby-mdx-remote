@@ -233,7 +233,7 @@ exports.sourceNodes = ({ actions, createNodeId, createContentDigest }) => {
     children: [],
     internal: {
       type: `MyNodeType`,
-      mediaType: `text/html`,
+      mediaType: `text/markdown`,
       content: nodeContent,
       contentDigest: createContentDigest(gatsbyMdxContent)
     }
@@ -259,41 +259,30 @@ exports.createPages = async ({ graphql, actions, reporter, getNode }) => {
   const { createPage, createNode } = actions;
   const result= await graphql(`
     query {
-      allMdx {
+      allMyNodeType {
         nodes {
-          id
-          parent {
+          childMdx {
             id
-          }
-        }
-      }
-      mdxMyNodeType {
-        childMdx {
-          id
-          markdownImageList {
-            childImageSharp {
-              gatsbyImageData
+            markdownImageList {
+              childImageSharp {
+                gatsbyImageData
+              }
             }
-          }
-          imageList {
-            childImageSharp {
-              gatsbyImageData
+            imageList {
+              childImageSharp {
+                gatsbyImageData
+              }
             }
-          }
-          internal {
-            contentFilePath
-          }
-        nodes {
-          id
-          parent {
-            id
+            internal {
+              contentFilePath
+            }
           }
         }
       }
     }
   `);
 
-  result.data.allMdx.nodes.forEach((node) => {
+  result.data.allMyNodeType.nodes.map(node => node.childMdx).forEach(node => {
     // If for some reason, the fields are not showing up in GraphQL, this is a workaround...
     // happened initially, seems to work normally now though, but could help someone maybe.
     const mdxNode = getNode(node.id);
