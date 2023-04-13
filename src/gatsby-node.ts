@@ -1,4 +1,4 @@
-import { createMdxNode } from "./createMdxNode.js";
+import { createMdxFileNode } from "./createMdxNode.js";
 import { createRemoteFileNode } from "gatsby-source-filesystem";
 import type { GatsbyNode } from "gatsby";
 
@@ -57,7 +57,7 @@ export const createResolvers: GatsbyNode["createResolvers"] = async (
       }) ||
         {}),
 
-      "markdownImageList": {
+      markdownImageList: {
         type: `[File]`,
         resolve: async (source: MdxNodeShape, _args: unknown, _context: unknown, _info: unknown) => {
           return Array.isArray(source.frontmatter["markdownImageList"])
@@ -104,17 +104,30 @@ export const createResolvers: GatsbyNode["createResolvers"] = async (
 };
 
 export const onCreateNode: GatsbyNode["onCreateNode"] = async (sourceArgs, options) => {
+  // FIXME: Inprovement opportunity: Guard the imput
+  const pluginOptions: PluginOptions = options as any;
+
+  const {
+    node,
+    actions,
+    getNode,
+    
+  } = sourceArgs;
+  const {createParentChildLink} = actions;
+
+  if (node.internal.type === "Mdx") {
+    const parentFileNode = node.parent && getNode(node.parent);
+    const grandParentContentNode = parentFileNode && parentFileNode?.parent && getNode(parentFileNode.parent);
+    grandParentContentNode && createParentChildLink({ parent: grandParentContentNode, child: node });
+  }
+
   if (!options["mdxNodeTypes"]) {
     throw new Error("This plugin requires mdxNodeTypes to be defined");
   }
 
-  // FIXME: Inprovement opportunity: Guard the imput
-  const pluginOptions: PluginOptions = options as any;
-
-  const { node } = sourceArgs;
-
   const configuredMdxNodeTypes: Array<string> = (pluginOptions.mdxNodeTypes && Object.keys(pluginOptions.mdxNodeTypes)) || [];
-  if (configuredMdxNodeTypes && configuredMdxNodeTypes.indexOf(node.internal.type) !== -1) {
-    createMdxNode(node, pluginOptions.mdxNodeTypes[node.internal.type], sourceArgs);
+  const isConfiguredType = configuredMdxNodeTypes && configuredMdxNodeTypes.indexOf(node.internal.type) !== -1;
+  if (isConfiguredType) {
+    await createMdxFileNode(node, pluginOptions.mdxNodeTypes[node.internal.type], sourceArgs);
   }
 };

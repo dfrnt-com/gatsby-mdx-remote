@@ -198,37 +198,49 @@ Using this example, to be used in `gatsby-node.js`, an MDX File node is created 
 
 ### `gatsby-node.js` sourceNodes section
 
+If you're not using [@dfrnt/gatsby-source-graphql-nodes](https://www.npmjs.com/package/@dfrnt/gatsby-source-graphql-nodes) to source nodes from a GraphQL endpoint, you can create them programmatically and manually from almost any source that you can get MDX data into your sourceNodes section, using a section like below:
+
+Note that the `frontmatter` data must be located in `data/frontmatter` in the produced node.
+
+If you need to create nodes from other content nodes, you should be able to create onwards nodes using the Gatsby `onCreateNode` API. A documentation PR for this could probably be helful for the community.
+
+For the example below, don't forget to add GatsbyImage to your trusted MDX components!
+
 ```javascript
 exports.sourceNodes = ({ actions, createNodeId, createContentDigest }) => {
   const { createNode } = actions
-
-  // Data can come from anywhere, but for now create it manually
+    // Data can come from anywhere, and let's create an MDX node programmatically from some data
   const frontmatter = {
     author: "John Doe",
     slug: `blog/blogpost`,
-    title: `John Does first blogpost`
+    title: `John Doe's first blogpost`,
+    imageList: ["https://images.unsplash.com/photo-1522262139463-236991a708cb?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=1920&q=80"]
   }
 
-  const mdx = `# Hello world\n\nHello world text`
-  const myData = {
+  const content = {
+    mdx: `# Hello world\n\nHello world text\n\n<GatsbyImage alt="test 0" image={getImage(props.pageContext.imageList[0]?.childImageSharp?.gatsbyImageData)}/>\n\n![Sign you've been looking for](https://images.unsplash.com/photo-1496449903678-68ddcb189a24?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=1920&q=80)`,
+    id: `my-data-${12345}`,
+  }
+  const gatsbyMdxContent = {
     frontmatter,
-    statement: { markdown: mdx }
+    statement: { markdown: content.mdx }
   };
-  const nodeContent = JSON.stringify(myData)
+  const nodeContent = JSON.stringify(gatsbyMdxContent)
 
-  const nodeMeta = {
-    id: createNodeId(`local-data-${12345}`),
+  const gatsbyNodeMeta = {
+    id: createNodeId(content.id),
     parent: null,
     children: [],
     internal: {
       type: `MyNodeType`,
       mediaType: `text/html`,
       content: nodeContent,
-      contentDigest: createContentDigest(myData)
+      contentDigest: createContentDigest(gatsbyMdxContent)
     }
   }
 
-  const node = Object.assign({}, myData, nodeMeta)
+  const node = Object.assign({}, { data: gatsbyMdxContent }, gatsbyNodeMeta)
+
   createNode(node)
 }
 
@@ -239,6 +251,8 @@ exports.sourceNodes = ({ actions, createNodeId, createContentDigest }) => {
 In below createPages example we use `getNode()` to resolve the node. The reason is that there is some interoperability issue, where at least one local mdx node is required for the GraphQL types to be properly created. Using createPages like below is a workaround for that issue.
 
 Therefore the suggestion to create at least one real local MDX file, any page really, so that the GraphQL configuration is updated for Mdx nodes. If so, a regular GraphQL query can be used.
+
+Out of your original node, "MyNodeType", an "mdxMyNodeType" will be created that contains the `childMdx` node pointing to the Mdx node.
 
 ```javascript
 exports.createPages = async ({ graphql, actions, reporter, getNode }) => {
@@ -333,6 +347,11 @@ The fields that are referenced to render the images (if preprocessing with sharp
             gatsbyImageData
           }
         }
+        markdownImageList {
+          childImageSharp {
+            gatsbyImageData
+          }
+        }
         internal {
           contentFilePath
         }
@@ -384,6 +403,7 @@ It is suggested to run `npm link` in the directory, and then run `npm link @dfrn
 
 * Make `frontmatterSharpRemoteImageUrlArrayField` applicable per type
 * Make `frontmatterSharpRemoteImageUrlArrayField` traversable maybe?
+* Add `onCreateNode` documentation for producing one node from another for ingestion.
 
 ## How to contribute
 

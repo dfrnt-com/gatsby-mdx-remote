@@ -48,7 +48,7 @@ const cacheMdxImages = async ({ pushImageUrlList, className }: CachedMdxImagesPr
   return mdx;
 };
 
-export const createMdxNode = async (
+export const createMdxFileNode = async (
   nodeData: Node & Record<string, any>,
   typeConfig: PluginTypeOptions,
   args: CreateNodeArgs<Record<string, unknown>>
