@@ -71,7 +71,7 @@ export const createMdxFileNode = async (
       : "";
 
   const mdxContentWithFrontmatter = `${
-    (typeConfig.mdxFrontmatterField && frontmatter) || undefined
+    (typeConfig.mdxFrontmatterField && frontmatter) || ""
   }\n\n${gatsbyImageImport}\n\n${mdxProcessedFieldData}`;
 
   if (mdxContentWithFrontmatter) {
