@@ -61,7 +61,7 @@ To get started with this plugin, you need to have a working MDX support. To supp
 ### 2. Install plugin and prerequisites
 
 ```shell
-npm install @dfrnt/gatsby-mdx-remote @mdx-js/react
+npm install gatsby-mdx-remote @mdx-js/react
 ```
 
 ### 3. Configure the plugins in gatsby-config.js
@@ -78,7 +78,7 @@ module.exports = {
       __key: "pages",
     },
     {
-      resolve: `@dfrnt/gatsby-mdx-remote`,
+      resolve: `gatsby-mdx-remote`,
       options: {
         mdxNodeTypes: {
           "MyNodeType": {
@@ -152,7 +152,7 @@ Example configuration options below:
 module.exports = {
   plugins: [
     {
-      resolve: `@dfrnt/gatsby-mdx-remote`,
+      resolve: `gatsby-mdx-remote`,
       options: {
         mdxNodeTypes: {
           "MyNodeType": {
@@ -386,7 +386,7 @@ git clone https://github.com/dfrnt-com/gatsby-mdx-remote
 npm install
 ```
 
-It is suggested to run `npm link` in the directory, and then run `npm link @dfrnt/gatsby-mdx-remote` in the `example-site` used for development.
+It is suggested to run `npm link` in the directory, and then run `npm link gatsby-mdx-remote` in the `example-site` used for development.
 
 ## Opportunities to contribute (suggestions for PRs)
 
