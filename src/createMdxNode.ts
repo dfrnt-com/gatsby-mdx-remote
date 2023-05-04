@@ -1,5 +1,5 @@
 import { createFileNodeFromBuffer } from "gatsby-source-filesystem";
-import YAML from "YAML";
+import YAML from "yaml";
 import type { Node, CreateNodeArgs } from "gatsby";
 import { PluginTypeOptions } from "./gatsby-node.js";
 import { extractUrlAndReplaceWithGatsbyImage } from "./extractUrlAndReplaceWithGatsbyImage.js";
